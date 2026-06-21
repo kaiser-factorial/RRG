@@ -213,8 +213,17 @@ def load_config(cfg_path: Path) -> dict:
 def resolve_repo_root(cfg_path: Path, override: str | None) -> Path:
     if override:
         return Path(override).resolve()
-    # config lives at <root>/PANEL_VAL/Pipeline_Report/vp_config.yaml
-    return cfg_path.resolve().parents[2]
+    # locate the working project root (the dir holding PANEL_VAL / DataAnal),
+    # honoring $RRG_PROJECT_ROOT — works wherever the tools live.
+    import os
+    env = os.environ.get("RRG_PROJECT_ROOT")
+    if env:
+        return Path(env).resolve()
+    p = cfg_path.resolve().parent
+    for cand in [p, *p.parents]:
+        if (cand / "PANEL_VAL").is_dir() or (cand / "DataAnal").is_dir():
+            return cand
+    return p.parent
 
 
 def allowed_patterns_for_stage(cfg: dict, stage: str):

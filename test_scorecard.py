@@ -19,17 +19,24 @@ import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+
+def _proj_root():
+    for c in [HERE, *HERE.parents]:
+        if (c / "PANEL_VAL").is_dir() or (c / "DataAnal").is_dir():
+            return c
+    return HERE.parent
+
 SC = HERE / "vp_scorecard.py"
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--repo-root", default=str(HERE.parents[1]))
+    ap.add_argument("--repo-root", default=str(_proj_root()))
     args = ap.parse_args()
     repo = Path(args.repo_root).resolve()
     run = repo / "PANEL_VAL/robustness_GPT-5.5"
     key = repo / "PANEL_VAL/origin_Fable-5"
-    prior = HERE / "SCORECARD_robustness_GPT-5.5_v2.md"
+    prior = HERE / "examples/SCORECARD_robustness_GPT-5.5_v2.md"
     tmp = Path(tempfile.mkdtemp(prefix="vp_sc_test_"))
     failures = []
 

@@ -19,12 +19,19 @@ import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+
+def _proj_root():
+    for c in [HERE, *HERE.parents]:
+        if (c / "PANEL_VAL").is_dir() or (c / "DataAnal").is_dir():
+            return c
+    return HERE.parent
+
 CONV = HERE / "convert_data.py"
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--repo-root", default=str(HERE.parents[1]))
+    ap.add_argument("--repo-root", default=str(_proj_root()))
     args = ap.parse_args()
     repo = Path(args.repo_root).resolve()
     candidates = [

@@ -42,8 +42,21 @@ except ImportError:
     sys.stderr.write("PyYAML is required: pip install pyyaml\n")
     sys.exit(1)
 
+def find_project_root(start: Path) -> Path:
+    """Working project root (dir holding PANEL_VAL / DataAnal); $RRG_PROJECT_ROOT overrides."""
+    import os
+    env = os.environ.get("RRG_PROJECT_ROOT")
+    if env:
+        return Path(env).resolve()
+    p = start.resolve()
+    for cand in [p, *p.parents]:
+        if (cand / "PANEL_VAL").is_dir() or (cand / "DataAnal").is_dir():
+            return cand
+    return p.parent
+
+
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parents[1]                      # …/LS_Lab
+REPO = find_project_root(HERE)              # the working project root (e.g. …/LS_Lab)
 CONFIG = HERE / "vp_config.yaml"
 QMAP = HERE / "questions_map.yaml"
 OPERATOR = REPO / "PANEL_VAL"

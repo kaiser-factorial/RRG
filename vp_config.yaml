@@ -37,7 +37,7 @@ files:
     hash_locked: true
   # Operator-side files sent ONLY for the stage(s) listed:
   stage_specific:
-    - file: PANEL_VAL/ANALYSIS_PROTOCOL_OG.md   # original methods = replication target
+    - file: RRG/prompts/ANALYSIS_PROTOCOL_OG.md  # original methods = replication target
       send_in: [replication]
   # Kept as archive/documentation, never sent:
   archive_never_send:
@@ -72,8 +72,8 @@ stages:
     opens: model                 # vary model only; method + data fixed
     methodology: revealed        # the _OG protocol IS what's being replicated
     prompt_skill: vp-replication
-    prompt_doc: PANEL_VAL/HIDDEN/STAGE1_REPLICATION_PROMPT.md
-    send: [all, subset, "PANEL_VAL/ANALYSIS_PROTOCOL_OG.md"]
+    prompt_doc: RRG/prompts/STAGE1_REPLICATION_PROMPT.md
+    send: [all, subset, "RRG/prompts/ANALYSIS_PROTOCOL_OG.md"]
     output_folder: "REPLICATE_{MODEL}/"
     report_name: "{MODEL}_Report.docx"
     grade_into: SCORECARD_stage1
@@ -84,7 +84,7 @@ stages:
     opens: method                # models design their own; question + data fixed
     methodology: hidden          # NO protocol file may be sent
     prompt_skill: vp-robustness
-    prompt_doc: PANEL_VAL/HIDDEN/METHOD_FREE_PROMPT.md
+    prompt_doc: RRG/prompts/METHOD_FREE_PROMPT.md
     send: [all, subset]
     output_folder: "{MODEL}/"
     report_name: "{MODEL}_Report.docx"

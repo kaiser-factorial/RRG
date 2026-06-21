@@ -112,7 +112,15 @@ def load_config(cfg_path: Path) -> dict:
 def resolve_repo_root(cfg_path: Path, override) -> Path:
     if override:
         return Path(override).resolve()
-    return cfg_path.resolve().parents[2]
+    import os
+    env = os.environ.get("RRG_PROJECT_ROOT")
+    if env:
+        return Path(env).resolve()
+    p = cfg_path.resolve().parent
+    for cand in [p, *p.parents]:
+        if (cand / "PANEL_VAL").is_dir() or (cand / "DataAnal").is_dir():
+            return cand
+    return p.parent
 
 
 def find_roster_entry(cfg, stage, model):

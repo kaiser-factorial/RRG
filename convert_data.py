@@ -50,8 +50,25 @@ except ImportError as e:  # pragma: no cover
     sys.stderr.write(f"missing dependency: {e}. pip install pandas numpy\n")
     sys.exit(1)
 
+def find_project_root(start: Path) -> Path:
+    """Locate the working project root (the dir holding PANEL_VAL / DataAnal).
+
+    Walks up from `start`; honors $RRG_PROJECT_ROOT; falls back to the parent.
+    Lets the tools live anywhere (e.g. LS_Lab/RRG/) and still find the data.
+    """
+    import os
+    env = os.environ.get("RRG_PROJECT_ROOT")
+    if env:
+        return Path(env).resolve()
+    p = start.resolve()
+    for cand in [p, *p.parents]:
+        if (cand / "PANEL_VAL").is_dir() or (cand / "DataAnal").is_dir():
+            return cand
+    return p.parent
+
+
 HERE = Path(__file__).resolve().parent
-REPO = HERE.parents[1]
+REPO = find_project_root(HERE)
 
 OUT_FORMATS = ("csv", "parquet")
 LABEL_BEARING = {".sav", ".zsav", ".por", ".dta"}

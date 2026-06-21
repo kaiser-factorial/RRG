@@ -21,6 +21,13 @@ import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+
+def _proj_root():
+    for c in [HERE, *HERE.parents]:
+        if (c / "PANEL_VAL").is_dir() or (c / "DataAnal").is_dir():
+            return c
+    return HERE.parent
+
 LINT = HERE / "vp_blinding_lint.py"
 
 
@@ -45,13 +52,13 @@ def build_clean(dst: Path, repo: Path, stage: str):
         shutil.copy(panel / f, dst / f)
     shutil.copytree(panel / "validation_subset", dst / "validation_subset")
     if stage == "replication":
-        shutil.copy(repo / "PANEL_VAL/ANALYSIS_PROTOCOL_OG.md", dst / "ANALYSIS_PROTOCOL_OG.md")
+        shutil.copy(repo / "RRG/prompts/ANALYSIS_PROTOCOL_OG.md", dst / "ANALYSIS_PROTOCOL_OG.md")
     return dst
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--repo-root", default=str(HERE.parents[1]))
+    ap.add_argument("--repo-root", default=str(_proj_root()))
     args = ap.parse_args()
     repo = Path(args.repo_root).resolve()
 
@@ -87,14 +94,14 @@ def main():
 
         # ---- LEAK 2: a SCORECARD present ----
         d = tmp / "leak_score"; shutil.copytree(rob, d)
-        shutil.copy(HERE / "SCORECARD_robustness_GPT-5.5_v2.md", d / "SCORECARD_x.md")
+        shutil.copy(HERE / "examples/SCORECARD_robustness_GPT-5.5_v2.md", d / "SCORECARD_x.md")
         p, h, f, rc = lint(d, "robustness", repo)
         print("leak: scorecard present:")
         check("hard-fails on withheld_files", "withheld_files" in h)
 
         # ---- LEAK 3: OG protocol sent into robustness ----
         d = tmp / "leak_proto"; shutil.copytree(rob, d)
-        shutil.copy(repo / "PANEL_VAL/ANALYSIS_PROTOCOL_OG.md", d / "ANALYSIS_PROTOCOL_OG.md")
+        shutil.copy(repo / "RRG/prompts/ANALYSIS_PROTOCOL_OG.md", d / "ANALYSIS_PROTOCOL_OG.md")
         p, h, f, rc = lint(d, "robustness", repo)
         print("leak: protocol in robustness (method must be hidden):")
         check("hard-fails on stage_methodology_forbid", "stage_methodology_forbid" in h)
@@ -121,9 +128,9 @@ def main():
         check("flags result_token_scan", "result_token_scan" in f)
         check("flag is assistive — does not hard-block", p and rc == 0)
 
-        # ---- LEAK 7: unexpected operator file (renamed HIDDEN doc) ----
+        # ---- LEAK 7: unexpected operator file (renamed methodology doc) ----
         d = tmp / "leak_route"; shutil.copytree(rob, d)
-        shutil.copy(repo / "PANEL_VAL/HIDDEN/REPLICATION_RUBRIC.md", d / "EXTRA.md")
+        shutil.copy(repo / "RRG/prompts/REPLICATION_RUBRIC.md", d / "EXTRA.md")
         p, h, f, rc = lint(d, "robustness", repo)
         print("leak: unexpected file not on send-list:")
         check("hard-fails on routing", "routing" in h)
