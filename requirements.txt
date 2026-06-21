@@ -1,0 +1,16 @@
+# RRG pipeline dependencies.
+#   pip install -r requirements.txt
+#
+# pyyaml      — read vp_config.yaml / questions_map.yaml (needed by every tool + the GUI)
+# pandas      — data handling in convert_data.py
+# numpy       — verification math in convert_data.py
+# pyreadstat  — read SPSS/Stata/SAS sources (.sav/.dta/.sas7bdat) with value labels
+# pyarrow     — write/read parquet derivatives
+#
+# The GUI, driver, linter and scorecard need only pyyaml; the Convert tab /
+# convert_data.py need the rest. Python 3.9+ (scripts use future annotations).
+pyyaml>=5.4
+pandas>=1.3
+numpy>=1.21
+pyreadstat>=1.1
+pyarrow>=7.0
