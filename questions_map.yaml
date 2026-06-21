@@ -1,0 +1,19 @@
+# Question map — the fixed 1–13 pipeline numbering ↔ the original report's
+# numbering (the original ran Q1 then Q4–Q15). Operator-side; used by
+# vp_scorecard.py to compare like with like. Source of record:
+# PANEL_VAL/INVEST_Qs_OG_op.md  /  origin_Fable-5/INVESTIGATION_SUMMARY.md.
+# Keep this fixed across all stages or cross-model comparison breaks.
+questions:
+  - { n: 1,  orig: 1,  topic: "Exclusion bias" }
+  - { n: 2,  orig: 4,  topic: "Security vs exploration" }
+  - { n: 3,  orig: 12, topic: "Response-style artifact", fragile: false }
+  - { n: 4,  orig: 5,  topic: "Within-scale vs joint dims" }
+  - { n: 5,  orig: 7,  topic: "Extreme needs = pathology?" }
+  - { n: 6,  orig: 6,  topic: "Ideal-type profiles" }
+  - { n: 7,  orig: 11, topic: "Predict ideal type" }
+  - { n: 8,  orig: 8,  topic: "Fit → satisfaction" }
+  - { n: 9,  orig: 15, topic: "Misfit → wanting change" }
+  - { n: 10, orig: 13, topic: "Gender & age" }
+  - { n: 11, orig: 9,  topic: "Psychopathy needs" }
+  - { n: 12, orig: 10, topic: "Dark security / residual jealousy", fragile: true }
+  - { n: 13, orig: 14, topic: "Queerplatonic extension" }

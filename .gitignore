@@ -1,0 +1,34 @@
+# --- data: never commit raw datasets or derivatives (source of truth lives outside git) ---
+*.sav
+*.zsav
+*.por
+*.dta
+*.sas7bdat
+*.xpt
+*.parquet
+*.pkl
+*.pickle
+*.xls
+*.xlsx
+*.csv
+!questions_map.yaml          # (yaml, not csv — explicit allow not needed, kept for clarity)
+*.codebook.csv
+*.meta.json
+
+# --- generated pipeline artifacts ---
+_packages/
+_compare_notes/
+REPLICATE_*/
+robustness_*/
+replication_*/
+generalization_*/
+provenance_log.jsonl
+dispatch.sh
+
+# --- python / os cruft ---
+__pycache__/
+*.pyc
+.DS_Store
+.ipynb_checkpoints/
+.venv/
+venv/
