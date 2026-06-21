@@ -21,7 +21,7 @@ This skill runs in the operator's environment to prepare one robustness run; the
 ## Stage invariants (must hold)
 
 - **Methodology: HIDDEN.** No methodology protocol may be in the package — not `ANALYSIS_PROTOCOL_OG.md`, not `_arm2`, not `ORIGINAL_METHODOLOGY.md`. The model must design its own.
-- **Results: BLIND.** Never include `origin_Fable-5/`, `SCORECARD_*`, or anything in `HIDDEN/`.
+- **Results: BLIND.** Never include `origin_Fable-5/`, `SCORECARD_*`, or anything in `factor_tooling/`.
 - **Payload identical across models** — do not tailor the prompt to the model (that would confound the comparison).
 - **Method choice is free and unsteered.** Never tell the model to use a different method, avoid the original's approach, or "think of something else." Independent convergence on the same method is a valid and informative outcome (method consensus + reproducibility), **not** a failure to test robustness — and forcing divergence makes any resulting change uninterpretable (you can't tell a fragile finding from a model using a method it judged inferior).
 - **Gate:** run only after the replication stage is graded.

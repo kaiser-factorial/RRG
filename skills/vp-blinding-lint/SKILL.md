@@ -22,7 +22,7 @@ The single check that stands between "package assembled" and "package sent." It 
 
 Two severities: **HARD FAIL → block dispatch**; **FLAG → human must confirm or fix (logged)**.
 
-1. **Withheld files present — HARD FAIL.** Fail if `PACKAGE` contains anything matching `blinding.always_withhold`: `origin_Fable-5/`, any `SCORECARD_*`, anything under `HIDDEN/` (incl. `ORIGINAL_METHODOLOGY.md`, `REPLICATION_RUBRIC.md`, `HELD_CONSTANT_RATIONALE.md`, the prompts, `validate*`), and `ANALYSIS_PROTOCOL_arm2.md`. Also fail on any operator-side file not on the stage's explicit send list.
+1. **Withheld files present — HARD FAIL.** Fail if `PACKAGE` contains anything matching `blinding.always_withhold`: `origin_Fable-5/` (the results key), any `SCORECARD_*`, anything under `factor_tooling/` (the `validate*` factor artifacts), the methodology docs by name (`ORIGINAL_METHODOLOGY.md`, the staged prompts/rubric — these live in `RRG/prompts/`, operator-side), and `ANALYSIS_PROTOCOL_arm2.md`. Also fail on any operator-side file not on the stage's explicit send list.
 
 2. **Stage methodology rule — HARD FAIL.** Per `blinding.per_stage_methodology`:
    - **replication** — `ANALYSIS_PROTOCOL_OG.md` *must* be present; no other protocol.

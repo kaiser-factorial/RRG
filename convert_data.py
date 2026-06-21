@@ -51,10 +51,11 @@ except ImportError as e:  # pragma: no cover
     sys.exit(1)
 
 def find_project_root(start: Path) -> Path:
-    """Locate the working project root (the dir holding PANEL_VAL / DataAnal).
+    """Locate the working project root.
 
-    Walks up from `start`; honors $RRG_PROJECT_ROOT; falls back to the parent.
-    Lets the tools live anywhere (e.g. LS_Lab/RRG/) and still find the data.
+    Order: $RRG_PROJECT_ROOT → nearest ancestor with a `.rrg_root` marker →
+    nearest with a data dir (operator/shared/data, or legacy PANEL_VAL/DataAnal)
+    → the parent. Lets the repo live anywhere inside a root and still find data.
     """
     import os
     env = os.environ.get("RRG_PROJECT_ROOT")
@@ -62,7 +63,11 @@ def find_project_root(start: Path) -> Path:
         return Path(env).resolve()
     p = start.resolve()
     for cand in [p, *p.parents]:
-        if (cand / "PANEL_VAL").is_dir() or (cand / "DataAnal").is_dir():
+        if (cand / ".rrg_root").exists():
+            return cand
+    markers = ("operator", "shared", "data", "PANEL_VAL", "DataAnal")
+    for cand in [p, *p.parents]:
+        if any((cand / m).is_dir() for m in markers):
             return cand
     return p.parent
 

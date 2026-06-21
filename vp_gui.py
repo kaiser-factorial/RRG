@@ -43,23 +43,28 @@ except ImportError:
     sys.exit(1)
 
 def find_project_root(start: Path) -> Path:
-    """Working project root (dir holding PANEL_VAL / DataAnal); $RRG_PROJECT_ROOT overrides."""
+    """Working project root: $RRG_PROJECT_ROOT → `.rrg_root` marker → a data dir
+    (operator/shared/data, or legacy PANEL_VAL/DataAnal) → the parent."""
     import os
     env = os.environ.get("RRG_PROJECT_ROOT")
     if env:
         return Path(env).resolve()
     p = start.resolve()
     for cand in [p, *p.parents]:
-        if (cand / "PANEL_VAL").is_dir() or (cand / "DataAnal").is_dir():
+        if (cand / ".rrg_root").exists():
+            return cand
+    markers = ("operator", "shared", "data", "PANEL_VAL", "DataAnal")
+    for cand in [p, *p.parents]:
+        if any((cand / m).is_dir() for m in markers):
             return cand
     return p.parent
 
 
 HERE = Path(__file__).resolve().parent
-REPO = find_project_root(HERE)              # the working project root (e.g. …/LS_Lab)
+REPO = find_project_root(HERE)              # the working project root (holds .rrg_root)
 CONFIG = HERE / "vp_config.yaml"
 QMAP = HERE / "questions_map.yaml"
-OPERATOR = REPO / "PANEL_VAL"
+OPERATOR = REPO / "operator"
 KEY_DIR = OPERATOR / "origin_Fable-5"
 STAGES = ["replication", "robustness", "generalization"]
 
@@ -321,7 +326,7 @@ class Handler(BaseHTTPRequestHandler):
         if u.path == "/api/tree":
             name = (q.get("run") or [""])[0]
             base = OPERATOR / name
-            if not base.is_dir() or confine(f"PANEL_VAL/{name}") is None:
+            if not base.is_dir() or confine(f"operator/{name}") is None:
                 return self._send(404, {"error": "run not found"})
             files = sorted(str(p.relative_to(REPO)) for p in base.rglob("*") if p.is_file())
             return self._send(200, {"files": files})

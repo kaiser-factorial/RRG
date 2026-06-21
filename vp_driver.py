@@ -118,7 +118,11 @@ def resolve_repo_root(cfg_path: Path, override) -> Path:
         return Path(env).resolve()
     p = cfg_path.resolve().parent
     for cand in [p, *p.parents]:
-        if (cand / "PANEL_VAL").is_dir() or (cand / "DataAnal").is_dir():
+        if (cand / ".rrg_root").exists():
+            return cand
+    markers = ("operator", "shared", "data", "PANEL_VAL", "DataAnal")
+    for cand in [p, *p.parents]:
+        if any((cand / m).is_dir() for m in markers):
             return cand
     return p.parent
 

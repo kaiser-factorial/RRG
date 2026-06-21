@@ -30,7 +30,11 @@ HERE = Path(__file__).resolve().parent
 
 def _proj_root():
     for c in [HERE, *HERE.parents]:
-        if (c / "PANEL_VAL").is_dir() or (c / "DataAnal").is_dir():
+        if (c / ".rrg_root").exists():
+            return c
+    markers = ("operator", "shared", "data", "PANEL_VAL", "DataAnal")
+    for c in [HERE, *HERE.parents]:
+        if any((c / m).is_dir() for m in markers):
             return c
     return HERE.parent
 
@@ -102,7 +106,7 @@ def main():
             for s in c["stages"]:
                 if s["id"] == "robustness":
                     s["send"] = ["all", "subset",
-                                 "PANEL_VAL/origin_Fable-5/INVESTIGATION_SUMMARY.md"]
+                                 "operator/origin_Fable-5/INVESTIGATION_SUMMARY.md"]
         leak_cfg = make_override_config(base_cfg, tmp, inject_key)
         rc, d, out, err = run("robustness", "DeepSeek", leak_cfg, repo)
         print("leaked send-list (results key):")

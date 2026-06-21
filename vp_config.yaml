@@ -14,26 +14,26 @@ numbering: "new 1-13 (see INVEST_Qs_OG_all.md)"
 origin:
   model: Claude Fable 5
   vendor: Anthropic
-  results_key: PANEL_VAL/origin_Fable-5/      # the held-back answer key
-  source_data: DataAnal/fullSet/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.sav
+  results_key: operator/origin_Fable-5/       # the held-back answer key
+  source_data: data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.sav
 
-# ---- Roots ----
+# ---- Roots (all relative to the project root: dir holding .rrg_root) ----
 paths:
-  model_facing_root: DataAnal/PANEL           # may be shared with validators
-  subset_folder:     DataAnal/PANEL/validation_subset   # auto-shared to ALL; hash-locked
-  operator_root:     PANEL_VAL                # withheld kit + grading
-  package_out:       PANEL_VAL/_packages      # driver assembles packages here
+  model_facing_root: shared                   # may be shared with validators
+  subset_folder:     shared/validation_subset # auto-shared to ALL; hash-locked
+  operator_root:     operator                 # withheld kit + grading
+  package_out:       operator/_packages       # driver assembles packages here
 
 # ---- File registry: routing class per file ----
 files:
   # Sent to every stage + model:
   all:
-    - DataAnal/PANEL/STUDY_OVERVIEW_all.md
-    - DataAnal/PANEL/INVEST_Qs_OG_all.md
-    - DataAnal/PANEL/DYFA_Guidelines_all.pdf
+    - shared/STUDY_OVERVIEW_all.md
+    - shared/INVEST_Qs_OG_all.md
+    - shared/DYFA_Guidelines_all.pdf
   # Entire folder auto-shared to all; linter verifies it is unmodified:
   subset:
-    path: DataAnal/PANEL/validation_subset/
+    path: shared/validation_subset/
     hash_locked: true
   # Operator-side files sent ONLY for the stage(s) listed:
   stage_specific:
@@ -41,12 +41,12 @@ files:
       send_in: [replication]
   # Kept as archive/documentation, never sent:
   archive_never_send:
-    - PANEL_VAL/archive/ANALYSIS_PROTOCOL_arm2.md       # converged methods (arm-era); legacy
+    - operator/archive/ANALYSIS_PROTOCOL_arm2.md        # converged methods (arm-era); legacy
   # Never leaves the operator side (breaks blinding):
   withheld:
-    - PANEL_VAL/origin_Fable-5/                  # = results key
-    - "PANEL_VAL/**/SCORECARD_*"
-    - PANEL_VAL/HIDDEN/                          # methodology key, rubric, prompts, factor tooling
+    - operator/origin_Fable-5/                   # = results key
+    - "operator/**/SCORECARD_*"
+    - operator/factor_tooling/                   # factor-validation tooling + data
 
 # ---- Roster: stage -> validator models ----
 # type: frontier (closed) | open (open-weights). Each stage needs >=1 of each.
@@ -110,11 +110,11 @@ blinding:
   always_withhold:               # fail if present in an outgoing package
     - "origin_Fable-5/"
     - "SCORECARD_*"
-    - "HIDDEN/"
+    - "factor_tooling/"
     - "ORIGINAL_METHODOLOGY.md"
     - "ANALYSIS_PROTOCOL_arm2.md"
   result_token_scan:
-    source: PANEL_VAL/origin_Fable-5/    # extract result numbers/keywords from the key
+    source: operator/origin_Fable-5/     # extract result numbers/keywords from the key
     action: flag                        # human confirms (semantic judgment)
   per_stage_methodology:
     replication:   { require: ["ANALYSIS_PROTOCOL_OG.md"], forbid: [] }

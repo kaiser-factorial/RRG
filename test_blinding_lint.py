@@ -24,7 +24,11 @@ HERE = Path(__file__).resolve().parent
 
 def _proj_root():
     for c in [HERE, *HERE.parents]:
-        if (c / "PANEL_VAL").is_dir() or (c / "DataAnal").is_dir():
+        if (c / ".rrg_root").exists():
+            return c
+    markers = ("operator", "shared", "data", "PANEL_VAL", "DataAnal")
+    for c in [HERE, *HERE.parents]:
+        if any((c / m).is_dir() for m in markers):
             return c
     return HERE.parent
 
@@ -46,7 +50,7 @@ def lint(pkg: Path, stage: str, repo_root: Path):
 
 
 def build_clean(dst: Path, repo: Path, stage: str):
-    panel = repo / "DataAnal/PANEL"
+    panel = repo / "shared"
     dst.mkdir(parents=True, exist_ok=True)
     for f in ("STUDY_OVERVIEW_all.md", "INVEST_Qs_OG_all.md", "DYFA_Guidelines_all.pdf"):
         shutil.copy(panel / f, dst / f)
@@ -87,7 +91,7 @@ def main():
 
         # ---- LEAK 1: results key dropped in ----
         d = tmp / "leak_key"; shutil.copytree(rob, d)
-        shutil.copytree(repo / "PANEL_VAL/origin_Fable-5", d / "origin_Fable-5")
+        shutil.copytree(repo / "operator/origin_Fable-5", d / "origin_Fable-5")
         p, h, f, rc = lint(d, "robustness", repo)
         print("leak: results key present:")
         check("hard-fails on withheld_files", "withheld_files" in h and rc == 2)

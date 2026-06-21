@@ -21,7 +21,7 @@ This skill runs in the operator's environment to prepare one replication run. It
 ## Stage invariants (must hold)
 
 - **Methodology: REVEALED.** The fixed protocol `ANALYSIS_PROTOCOL_OG.md` (original methods) is *required* in the package — it is what's being replicated.
-- **Results: BLIND.** Never include `origin_Fable-5/`, any `SCORECARD_*`, `ORIGINAL_METHODOLOGY.md`, the `_arm2` protocol, or anything in `HIDDEN/`.
+- **Results: BLIND.** Never include `origin_Fable-5/`, any `SCORECARD_*`, `ORIGINAL_METHODOLOGY.md`, the `_arm2` protocol, or anything in `factor_tooling/`.
 - **Methodology payload is model-agnostic and identical across models** — do not tailor the prompt to the model (that would confound the comparison).
 - Gate: only run after the prior ladder stage is graded (replication is stage 1, so no upstream gate; downstream robustness waits on this).
 

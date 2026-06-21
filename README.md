@@ -74,22 +74,27 @@ never committed. That root is self-contained and movable:
 
 ```
 your_root/                 ← e.g. RRG_root (move it anywhere; the pipeline still works)
+├── .rrg_root              ← empty marker that pins the root (touch it)
 ├── RRG/                   ← this repo (clone here)
-├── DataAnal/
-│   ├── fullSet/<dataset>.sav        ← the source of truth (per origin.source_data in vp_config.yaml)
-│   └── PANEL/                       ← model-facing inputs (the *_all docs + validation_subset/)
-└── PANEL_VAL/             ← operator-only runtime (withheld from validators)
-    ├── origin_Fable-5/             ← the results key (the analysis under validation)
-    ├── robustness_*/ replication_*/  ← validator run folders
-    ├── HIDDEN/                      ← factor tooling
+├── data/                  ← the source-of-truth dataset(s)
+│   └── <dataset>.sav          (per origin.source_data in vp_config.yaml)
+├── shared/                ← what validators RECEIVE (model-facing: *_all docs + validation_subset/)
+└── operator/             ← WITHHELD from validators (the blind)
+    ├── origin_Fable-5/             the analysis under validation = answer key
+    ├── robustness_*/ replication_*/  validator run folders
+    ├── factor_tooling/             factor-validation tooling
     └── archive/
 ```
 
-**How the root is found:** each tool walks up from its own location to the first
-directory containing `PANEL_VAL/` or `DataAnal/` — so the repo's parent (your
-root) wins, and `RRG/` is portable. Override with `RRG_PROJECT_ROOT=/path` or the
-`--repo-root` flag. Because the search stops at your root, moving the whole root
-out of any surrounding folders changes nothing.
+The top-level split *is* the blinding boundary: **`shared/` may go to a
+validator, `operator/` never does.** See [`docs/LAYOUT.md`](docs/LAYOUT.md) for
+the full description.
+
+**How the root is found:** each tool resolves it as `$RRG_PROJECT_ROOT` → the
+nearest ancestor with a `.rrg_root` marker → the nearest with a data dir
+(`operator/`/`shared/`/`data/`, or legacy `PANEL_VAL/`/`DataAnal/`) → the repo's
+parent. So the root is unambiguous and `RRG/` stays portable; moving the whole
+root anywhere changes nothing.
 
 The paths the tools expect inside the root are set in `vp_config.yaml`
 (`origin.source_data`, `paths.*`, `files.*`). To validate a *different* project,

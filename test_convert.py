@@ -22,7 +22,11 @@ HERE = Path(__file__).resolve().parent
 
 def _proj_root():
     for c in [HERE, *HERE.parents]:
-        if (c / "PANEL_VAL").is_dir() or (c / "DataAnal").is_dir():
+        if (c / ".rrg_root").exists():
+            return c
+    markers = ("operator", "shared", "data", "PANEL_VAL", "DataAnal")
+    for c in [HERE, *HERE.parents]:
+        if any((c / m).is_dir() for m in markers):
             return c
     return HERE.parent
 
@@ -35,8 +39,8 @@ def main():
     args = ap.parse_args()
     repo = Path(args.repo_root).resolve()
     candidates = [
-        repo / "DataAnal/PANEL/validation_subset/LS_analysis_main_N2074.sav",
-        repo / "DataAnal/fullSet/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.sav",
+        repo / "shared/validation_subset/LS_analysis_main_N2074.sav",
+        repo / "data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.sav",
     ]
     sav = next((c for c in candidates if c.exists()), None)
     if sav is None:

@@ -213,15 +213,19 @@ def load_config(cfg_path: Path) -> dict:
 def resolve_repo_root(cfg_path: Path, override: str | None) -> Path:
     if override:
         return Path(override).resolve()
-    # locate the working project root (the dir holding PANEL_VAL / DataAnal),
-    # honoring $RRG_PROJECT_ROOT — works wherever the tools live.
+    # working project root: $RRG_PROJECT_ROOT → `.rrg_root` marker → a data dir
+    # (operator/shared/data, or legacy PANEL_VAL/DataAnal) → the parent.
     import os
     env = os.environ.get("RRG_PROJECT_ROOT")
     if env:
         return Path(env).resolve()
     p = cfg_path.resolve().parent
     for cand in [p, *p.parents]:
-        if (cand / "PANEL_VAL").is_dir() or (cand / "DataAnal").is_dir():
+        if (cand / ".rrg_root").exists():
+            return cand
+    markers = ("operator", "shared", "data", "PANEL_VAL", "DataAnal")
+    for cand in [p, *p.parents]:
+        if any((cand / m).is_dir() for m in markers):
             return cand
     return p.parent
 

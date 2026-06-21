@@ -2,7 +2,17 @@
 
 *Continuity brief for a future session (Claude or other). Read this first to get oriented, then the pointers at the bottom. Last updated 2026-06-21.*
 
-> **Canonical location (as of 2026-06-21):** all pipeline code, tests, config, skills, framework docs, prompts/rubric/methodology, and example scorecards now live in **`LS_Lab/RRG/`** — the single source of truth, a private git repo (`git@github.com:kaiser-factorial/RRG.git`). The old `PANEL_VAL/Pipeline_Report/` and the `PANEL_VAL/HIDDEN/` prompts were moved here (de-duplicated). `PANEL_VAL/` now holds only **runtime inputs**: the data, the results key `origin_Fable-5/`, validator run folders, the model-facing `_all` docs + `validation_subset/` (under `DataAnal/PANEL/`), `HIDDEN/validate*` (factor tooling), and `INVEST_Qs_OG_op.md`. The tools find the project root automatically (walk up for `PANEL_VAL`/`DataAnal`, or set `$RRG_PROJECT_ROOT`), so keep `RRG/` inside the working folder to run in place. Paths like `Pipeline_Report/...` below are historical — read them as `RRG/...` (docs in `RRG/docs/`, prompts in `RRG/prompts/`, scorecards in `RRG/examples/`).
+> **Canonical location + layout (as of 2026-06-21):** all pipeline code, tests, config, skills, framework docs, prompts/rubric/methodology, and example scorecards live in the **`RRG/`** repo (single source of truth; `git@github.com:kaiser-factorial/RRG.git`). The repo sits inside a **self-contained, movable project root** (e.g. `RRG_root/`, marked by a `.rrg_root` file) that also holds the runtime data in **role-based folders** — see `docs/LAYOUT.md`:
+>
+> | role | folder (new) | was |
+> |---|---|---|
+> | source-of-truth dataset | `data/` | `DataAnal/fullSet/` |
+> | model-facing (sent to validators) | `shared/` | `DataAnal/PANEL/` |
+> | operator-only (withheld; the blind) | `operator/` | `PANEL_VAL/` |
+> | results key (analysis under validation) | `operator/origin_Fable-5/` | `PANEL_VAL/origin_Fable-5/` |
+> | factor tooling | `operator/factor_tooling/` | `PANEL_VAL/HIDDEN/` |
+>
+> The top-level split **`shared/` (may go to a validator) vs `operator/` (never does)** is the blinding boundary. Tools find the root via `$RRG_PROJECT_ROOT` → `.rrg_root` marker → a data dir (new or legacy names) → repo parent. **Read inline paths below historically:** `Pipeline_Report/...` → `RRG/...`; `DataAnal/PANEL/...` → `shared/...`; `PANEL_VAL/...` → `operator/...`; `HIDDEN/` → `operator/factor_tooling/`.
 
 ---
 
