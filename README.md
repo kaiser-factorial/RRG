@@ -67,15 +67,36 @@ prompts/                     staged validator prompts, rubric, original methodol
 examples/                    worked-example scorecards (GPT-5.5 robustness v1 → v2)
 ```
 
-## Data (kept out of git)
+## Project root & data (kept out of git)
 
-The **original dataset is the single source of truth** and is never committed. The
-tools resolve data relative to a project root (by default the parent of this
-folder). To run in place, keep `RRG/` next to the working data dirs
-(`DataAnal/`, `PANEL_VAL/`); most scripts also accept `--repo-root` to point
-elsewhere. `convert_data.py` produces the analysis-ready csv/parquet derivatives
-on demand (and verifies them identical to the source), so derivatives don't need
-to be stored.
+Clone this repo **into a root directory** that also holds the data — the data is
+never committed. That root is self-contained and movable:
+
+```
+your_root/                 ← e.g. RRG_root (move it anywhere; the pipeline still works)
+├── RRG/                   ← this repo (clone here)
+├── DataAnal/
+│   ├── fullSet/<dataset>.sav        ← the source of truth (per origin.source_data in vp_config.yaml)
+│   └── PANEL/                       ← model-facing inputs (the *_all docs + validation_subset/)
+└── PANEL_VAL/             ← operator-only runtime (withheld from validators)
+    ├── origin_Fable-5/             ← the results key (the analysis under validation)
+    ├── robustness_*/ replication_*/  ← validator run folders
+    ├── HIDDEN/                      ← factor tooling
+    └── archive/
+```
+
+**How the root is found:** each tool walks up from its own location to the first
+directory containing `PANEL_VAL/` or `DataAnal/` — so the repo's parent (your
+root) wins, and `RRG/` is portable. Override with `RRG_PROJECT_ROOT=/path` or the
+`--repo-root` flag. Because the search stops at your root, moving the whole root
+out of any surrounding folders changes nothing.
+
+The paths the tools expect inside the root are set in `vp_config.yaml`
+(`origin.source_data`, `paths.*`, `files.*`). To validate a *different* project,
+drop your dataset + study inputs into the root following this layout and point
+those config keys at them. `convert_data.py` regenerates the csv/parquet
+derivatives on demand (verified identical to the source), so derivatives don't
+need to be stored.
 
 ## Conventions (don't break these)
 
