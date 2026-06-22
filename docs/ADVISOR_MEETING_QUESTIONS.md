@@ -45,16 +45,49 @@ These questions are ordered by how directly they block the next validation runs.
 7. If no independent wave is currently available, should we implement the
    holdout/resampling machinery now or leave Stage 3 explicitly pending?
 
-## 3. Multiverse versus “omniverse”
+## 3. Exploratory “omniverse” versus robustness multiverse
 
-1. When you say **omniverse**, do you mean a broad lead-finding scan over the
-   correlation matrix, a specification multiverse, or both?
-2. If it is a lead-finding scan, is it exploratory work beside the validation
-   ladder rather than another validation stage?
-3. Do you also want a formal multiverse/specification-curve analysis over plausible
-   cleaning rules, construct definitions, covariates, and estimators?
-4. Which choices should be treated as legitimate analytic degrees of freedom, and
-   which definitions must remain fixed for comparability?
+**Working distinction to confirm:** the proposed “omniverse” is an exploratory
+**association atlas**: select roughly 100 important, relatively nonredundant
+variables; compute all pairwise associations; and rank the strongest relationships.
+A multiverse starts with a particular question or finding and reruns it across a
+declared set of defensible data-processing and analysis choices to show how much
+the conclusion depends on those choices. The first generates leads; the second
+stress-tests conclusions.
+
+1. Is that an accurate description of what you mean by **omniverse**, and is
+   “omniverse” intended as a formal term or an internal name for the association scan?
+2. How will the approximately 100 variables be selected? What makes a variable
+   “important,” and does “independent” mean conceptually nonredundant, weakly
+   correlated, or statistically independent?
+3. Is the deliverable simply a ranked 100 × 100 association matrix, or also a
+   network/cluster map, variable families, and a shortlist of candidate findings?
+4. Which association measures should be run?
+   - Pearson for linear association;
+   - Spearman for monotonic association;
+   - Chatterjee's xi for more general, potentially nonlinear dependence;
+   - more than one as complementary screens?
+5. Chatterjee's xi is directional: xi(X, Y) and xi(Y, X) need not agree. For a
+   matrix, should both directions be retained, summarized, or symmetrized—and how?
+6. A 100-variable scan contains 4,950 unordered pairs. How should we control false
+   discoveries and unstable rankings: false-discovery-rate adjustment, permutation
+   tests, bootstrap stability, a magnitude threshold, and/or confirmation on a holdout?
+7. Will the same observations be used to select the 100 variables, rank their
+   associations, and make substantive claims? If so, should the matrix remain
+   explicitly exploratory until its leads are tested on held-out or new data?
+8. Where should this work sit relative to RRG? Recommended structure:
+   - omniverse/association atlas **beside and before** the ladder as lead generation;
+   - freeze selected leads and their definitions;
+   - validate them through replication/robustness/generalization;
+   - use a multiverse as an additional robustness layer for priority findings.
+9. Do you want a formal multiverse/specification-curve analysis over plausible
+   exclusion rules, missing-data handling, construct definitions, covariates,
+   estimators, and outcome codings?
+10. Which analytic choices are genuinely defensible alternatives to vary in that
+    multiverse, and which construct definitions must remain fixed so the analyses
+    still answer the same question?
+11. Should multiverse stability contribute to the Stage-2 robustness verdict, or
+    be reported as a separate evidence dimension alongside the three-stage ladder?
 
 ## 4. Model roster and execution
 
