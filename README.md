@@ -48,11 +48,14 @@ python3 test_driver.py && python3 test_scorecard.py
 Start the GUI:
 
 ```bash
-python3 vp_gui.py          # → http://127.0.0.1:8765
+./run_gui.sh               # → http://127.0.0.1:8765
+./run_gui.sh --port 8766   # use a different port
 ```
 
-Requirements: `python3`, `pyyaml`, `pandas`, `pyreadstat`, `pyarrow`
-(`pip install pyyaml pandas pyreadstat pyarrow`).
+The launcher creates a repo-local `.venv` and installs the dependencies in
+`requirements.txt` on first use. It reinstalls them only when that file changes.
+Python 3.9+ is the only system prerequisite. Set `RRG_PYTHON=/path/to/python`
+to choose a specific interpreter.
 
 ## Layout
 

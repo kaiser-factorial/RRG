@@ -1,0 +1,98 @@
+# =====================================================================
+# STUDY CARTRIDGE (worked example: LoveSmarter)
+# ---------------------------------------------------------------------
+# This is the lab-specific "cartridge" that plugs into the reusable
+# validation engine. A new lab fills THIS out (and drops their files in);
+# the engine (stages, blinding gate, dispatch, modes, GUI) stays untouched.
+#
+# Every field below is annotated with the Setup-tab control that will
+# eventually edit it:
+#   [file]     → file picker (path inside the project root)
+#   [text]     → single-line text input
+#   [num]      → number input
+#   [prose]    → multi-line textarea (lab-authored paragraph injected into prompts)
+#   [toggle]   → optional module on/off
+#   [list]     → repeatable rows
+#
+# Placeholders the prompts will use are shown as {LIKE_THIS} next to the
+# field that fills them. See docs/GENERALIZATION_DESIGN.md for the full
+# token→field→control audit.
+# =====================================================================
+
+study:
+  title: "LoveSmarter — DYFA validation"        # [text]  {STUDY_TITLE}
+  overview_file: shared/STUDY_OVERVIEW_all.md   # [file]  {STUDY_OVERVIEW}  (study goals/design)
+
+  # ---- Dataset the validators analyze --------------------------------
+  dataset:
+    source: data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.sav  # [file] original, single source of truth
+    main_name: LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal   # [text] {MAIN_DATASET} = Convert-tab derivative stem
+    merge_key: ResponseId                        # [text]  {MERGE_KEY}
+    formats: [csv, parquet]                       # [list]  the formats Convert emits
+    codebook: data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.codebook.csv  # [file] {CODEBOOK} (from Convert)
+    subset_overview: ''                          # [file] (unused — no prebuilt subset)
+    # Lab-authored paragraph dropped into the data-orientation turn.
+    # May reference {MAIN_DATASET}, {MERGE_KEY}, {CODEBOOK}, {FORMATS}.
+    orientation: |-                              # [prose] {DATA_ORIENTATION}  (may embed other placeholders)
+      Then orient yourself in the data: the full dataset is {MAIN_DATASET} ({FORMATS} — deterministic, verified-identical conversions of the original; use whichever is easiest). Variable definitions are in {CODEBOOK}. There is no pre-made analysis subset — derive your own analysis sample by applying the held-constant definitions below (exclusions, groupings) to the full dataset, and report the resulting Ns.
+    aux:                                          # [toggle] optional secondary dataset (off: model uses the full set)
+      enabled: false
+      name: ''
+      note: ''
+
+  # ---- Pre-computed solution given to validators (OPTIONAL module) ----
+  # For studies that hand the model a fixed/validated artifact it must
+  # NOT re-derive (e.g. a factor solution). Off here — model works from raw data.
+  given_solution:                                # [toggle] {GIVEN_SOLUTION_*}
+    enabled: false
+    glossary: shared/validation_subset/FACTOR_GLOSSARY.md          # [file] {SOLUTION_GLOSSARY}
+    artifacts:                                    # [list] [file]s merged on {MERGE_KEY}
+      - shared/validation_subset/FACTOR_SCORES_N2074.csv
+      - shared/validation_subset/FACTOR_LOADINGS_170x8.csv
+    note: |-                                      # [prose] {GIVEN_SOLUTION_NOTE}  (glossary folded in)
+      The factor solution is already validated and is given — the eight factor scores + composites are in FACTOR_SCORES_N2074.csv (keyed by {MERGE_KEY}; merge them on), loadings in FACTOR_LOADINGS_170x8.csv. What the eight factor scores mean is in {SOLUTION_GLOSSARY}. Use these as-is; do not re-derive the validated joint 8-factor solution. (You may run other factor analyses on the raw items where a question calls for it.)
+
+  # ---- Additional provided inputs (OPTIONAL list) -------------------
+  # Extra files handed to the validator as given (e.g. a prof-supplied CFA
+  # solution). Each row: name / file / note. Shown to the model via {ADDITIONAL}.
+  # In the Setup tab, edit one per line as:  name :: file :: note
+  additional: []                                 # [list]  e.g.
+  #  - name: CFA solution
+  #    file: shared/CFA_solution.csv
+  #    note: confirmatory factor solution provided by advisor — merge on {MERGE_KEY}, do not re-derive
+
+  # ---- Research questions -------------------------------------------
+  questions:
+    file: shared/INVEST_Qs_OG_all.md             # [file]  {QUESTIONS_FILE}
+    count: 13                                     # [num]   {N_QUESTIONS}  (drives Q1..Q{N} pipeline + Compare)
+    map: RRG/questions_map.yaml                    # [file]  new→original Q mapping (Compare tab)
+
+  # ---- Held-constant definitions ------------------------------------
+  held_constants:
+    file: shared/validation_subset/VALIDATION_INSTRUCTIONS.md      # [file] {HELD_CONSTANTS_FILE}
+    summary: "relationship-type groupings, gender grouping, high-psychopathy cutoff, multi-partner need, composites"  # [prose] {HELD_CONSTANTS_SUMMARY}
+    # The specific group structure the QA pass should verify Ns for:
+    qa_groups: "the relationship-type groups (4-class and 5-class), the gender groups, and the psychopathy bands"     # [prose] {HELD_CONSTANT_GROUPS}
+
+  # ---- The original investigation under validation ------------------
+  original:
+    methodology_file: RRG/prompts/ANALYSIS_PROTOCOL_OG.md  # [file] replication target (revealed in Stage 1 only)
+    results_key: operator/origin_Fable-5/        # [file] the held-back answer key (NEVER sent)
+    model: "Claude Fable 5"                       # [text] who produced the original (excluded as validator)
+    vendor: Anthropic                             # [text]
+
+  # ---- Deliverable spec ---------------------------------------------
+  deliverable:
+    report_name: "{MODEL}_Report.docx"            # [text] {REPORT_NAME} pattern
+    reporting_spec: |                             # [prose] {REPORTING_SPEC} (per-question stats to report)
+      Report, per question: the analysis N and any subgroup Ns; descriptive inputs
+      (group means/SDs, cross-tabs, or input correlations); the test statistic, effect
+      size, and a 95% confidence interval; and a one-sentence conclusion.
+    method_guide:                                 # [toggle] optional special reporting method (here: DYFA)
+      enabled: true
+      name: DYFA                                  # [text] {METHOD_GUIDE_NAME}
+      file: shared/DYFA_Guidelines_all.pdf        # [file] {METHOD_GUIDE_FILE}
+
+# NOTE: stages, roster, blinding, constraints, dispatch, and paths stay in
+# vp_config.yaml (the engine manifest). This cartridge only carries what is
+# specific to *this study*. The two are merged at load time.

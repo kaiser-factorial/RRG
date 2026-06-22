@@ -1,0 +1,56 @@
+# study cartridge (saved from the Setup tab)
+# See study.example.yaml for field annotations and docs/GENERALIZATION_DESIGN.md.
+study:
+  title: LoveSmarter — DYFA validation
+  overview_file: shared/STUDY_OVERVIEW_all.md
+  dataset:
+    source: data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.sav
+    main_name: LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal
+    merge_key: ResponseId
+    formats:
+    - csv
+    - parquet
+    codebook: data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.codebook.csv
+    subset_overview: ''
+    orientation: |-
+      Then orient yourself in the data: the full dataset is {MAIN_DATASET} ({FORMATS} — deterministic, verified-identical conversions of the original; use whichever is easiest). Variable definitions are in {CODEBOOK}. There is no pre-made analysis subset — derive your own analysis sample by applying the held-constant definitions below (exclusions, groupings) to the full dataset, and report the resulting Ns.
+    aux:
+      enabled: false
+      name: ''
+      note: ''
+  given_solution:
+    enabled: false
+    glossary: shared/validation_subset/FACTOR_GLOSSARY.md
+    artifacts:
+    - shared/validation_subset/FACTOR_SCORES_N2074.csv
+    - shared/validation_subset/FACTOR_LOADINGS_170x8.csv
+    note: The factor solution is already validated and is given — the eight factor scores + composites
+      are in FACTOR_SCORES_N2074.csv (keyed by {MERGE_KEY}; merge them on), loadings in FACTOR_LOADINGS_170x8.csv.
+      What the eight factor scores mean is in {SOLUTION_GLOSSARY}. Use these as-is; do not re-derive the
+      validated joint 8-factor solution. (You may run other factor analyses on the raw items where a question
+      calls for it.)
+  # extra provided inputs (e.g. a prof-supplied CFA solution); each: {name, file, note}
+  additional: []
+  questions:
+    file: shared/INVEST_Qs_OG_all.md
+    count: 13
+    map: RRG/questions_map.yaml
+  held_constants:
+    file: shared/validation_subset/VALIDATION_INSTRUCTIONS.md
+    summary: relationship-type groupings, how "high psychopathy" is defined, etc.
+    qa_groups: the relationship-type groups (4-class and 5-class), the gender groups, and the psychopathy
+      bands
+  original:
+    methodology_file: RRG/prompts/ANALYSIS_PROTOCOL_OG.md
+    results_key: operator/origin_Fable-5/
+    model: Claude Fable 5
+    vendor: Anthropic
+  deliverable:
+    report_name: '{MODEL}_Report.docx'
+    reporting_spec: 'Report, per question: the analysis N and any subgroup Ns; descriptive inputs (group
+      means/SDs, cross-tabs, or input correlations); the test statistic, effect size, and a 95% confidence
+      interval; and a one-sentence conclusion.'
+    method_guide:
+      enabled: true
+      name: DYFA
+      file: shared/DYFA_Guidelines_all.pdf

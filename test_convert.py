@@ -100,6 +100,20 @@ def main():
         if pq:
             check("parquet is bit-for-bit exact", pq["verify"]["exact"] is True)
         check("verification recorded in sidecar", "verification" in m)
+        check("CSV records an explicit missing-value token",
+              m["na_token"] == "__RRG_NA__")
+
+        # CSV must distinguish empty text, missing data, and strings that look
+        # like booleans; pandas' default inference conflates these cases.
+        from convert_data import write_csv, verify_against_source
+        edge = pd.DataFrame({"text": ["", "true", "NA", None],
+                             "number": [1.0, None, 3.5, 4.0]})
+        edge_path = tmp / "edge.csv"
+        write_csv(edge, edge_path, "__RRG_NA__", None)
+        edge_verify = verify_against_source(edge, edge_path)
+        check("CSV preserves empty/missing/boolean-like text distinctly",
+              edge_verify["ok"] and edge_verify["string_mismatches"] == 0
+              and edge_verify["nan_pattern_ok"])
 
         # csv byte-determinism
         run("b", ["--formats", "csv"])

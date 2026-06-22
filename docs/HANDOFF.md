@@ -1,6 +1,35 @@
 # HANDOFF — AI-Assisted Research Validation Project
 
-*Continuity brief for a future session (Claude or other). Read this first to get oriented, then the pointers at the bottom. Last updated 2026-06-21.*
+*Continuity brief for a future session (Claude or other). Read this first to get oriented, then the pointers at the bottom. Last updated 2026-06-22.*
+
+---
+
+## ⮕ Session update — 2026-06-22 (GUI overhaul + pipeline generalization + dataset switch)
+
+All work this session is in **`RRG/vp_gui.py`**, **`RRG/prompts/`**, **`RRG/vp_config.yaml`**, and new files **`RRG/study.yaml`** + **`RRG/study.example.yaml`** + **`RRG/docs/GENERALIZATION_DESIGN.md`**. Run the GUI: `cd RRG && python3 vp_gui.py --port 8766` (8765 had a stray process; the server does **not** hot-reload — restart after edits; prompt/cartridge edits show on next render).
+
+**1. GUI/UX polish.** Hover+cursor feedback on all clickables; smooth transitions; loading spinners; async **busy buttons** (disable + spinner on Build/Convert/Save/Generate); input `:focus` states; figure fade-in; `prefers-reduced-motion` guard. **Build tab:** already-built indicator (reads `_packages/provenance_log.jsonl`), saved-path box, explicit "dry-run saved nothing" message, prompt-doc path, green stage chip, state persists across nav. **Runs tab:** click a run → row stays highlighted + a scoped, collapsible **per-run prompt** appears (only that stage's prompt, split into per-turn chunks, with model/output/report auto-filled).
+
+**2. Discussion-mode toggle.** Prompt turns can be tagged `{mode:discuss}` / `{mode:nodiscuss}` (untagged = both). Default **discuss**. No-discuss = model self-proposes then an **operator-reviewed lock** (no debate). Toggle lives in both Runs preview and Build. Also fixed `METHOD_FREE_PROMPT.md` Turn 6: execution doc `INVEST_METH.md`→**`APPROACH.md`**, hardcoded `Laguna_Report`→`{REPORT_NAME}`.
+
+**3. Generalization — engine/cartridge split.** The pipeline is now retargetable to another lab. Reusable **engine** = `vp_config.yaml` + `vp_gui.py` + stage-prompt **scaffolds**. Per-lab **cartridge** = `RRG/study.yaml` (worked example `study.example.yaml`; full design + prompt audit in `docs/GENERALIZATION_DESIGN.md`). Prompts are templates with `{PLACEHOLDERS}` (resolve to file basenames / cartridge values, recursive) and `{#module}…{/module}` optional blocks. Engine fns in `vp_gui.py`: `load_study`, `study_placeholders`, `study_modules`, `render_prompt`, `fill_turns`, `render_stage_prompt`, `preflight`. **Setup tab** (new) edits `study.yaml` via `/api/study` (GET/POST — `yaml.safe_dump`, **strips comments**), runs **`/api/preflight`** (file-exists + clean-render checks), and previews any stage via `/api/study_preview`.
+
+**4. Dataset switch (this is the big one — partially resolves Open decision #1).** Dropped the prebuilt `validation_subset/` samples. Now the validator gets the **full converted dataset** (deterministic, verified derivatives of `origin.source_data` from the Convert tab) and **derives its own analysis sample** via the held-constants. Specifics:
+- `study.yaml` dataset → `LSS1_…forPascal` (`.csv`/`.parquet`) + Convert codebook (`…codebook.csv`); `subset_overview` cleared; **aux** and **given_solution** modules turned **off** (factor solution dropped for now).
+- New **`additional` datasets module** (cartridge list + `{ADDITIONAL}` placeholder + Setup-tab editor "name :: file :: note") — this is where a **prof-supplied CFA** plugs in later without re-architecting.
+- **Routing updated:** `vp_config.yaml` `files.all` now carries `VALIDATION_INSTRUCTIONS.md` + the 3 converted derivatives; stage `send` lists drop the `subset` token; `files.subset` retired; `blinding.subset_integrity`→`dataset_integrity` note; `check_subset_integrity` no longer fires. **All test suites green** (`test_driver`, `test_blinding_lint`, `test_convert`, `test_scorecard`) after updating `test_driver.py` + `test_blinding_lint.py` to the converted-dataset world.
+- I generated the derivatives into `data/` (parquet **bit-for-bit exact**; **csv had 46 string mismatches + ~3.6e-12 float noise** — see pending items).
+
+**Pending / next session:**
+- **Stage colors** (Corina asked): currently all-green chips. Decision needed — r/y/g vs a cool palette. *Recommendation: green/blue/purple* (stages are a depth progression, not a quality/stoplight gradient; cool palette avoids implying stage 1–2 are "bad", and is colorblind-friendlier). One-liner change in the `.stagechip` CSS + a per-stage class in `stageChip()`.
+- **CSV convert fidelity:** the csv derivative didn't fully verify (46 string mismatches, tiny float noise); parquet is exact. Investigate (encoding/NaN/float-format) or prefer parquet as the model-facing format.
+- **result_token_scan noise:** with the full raw dataset in the package, the assistive token scan flags many coincidental numbers. Consider excluding the dataset derivative from that scan.
+- **Operator-only prompt sections** ("Setup before the run" / "Fill in") at the top of each prompt `.md` still name LoveSmarter subset files — not rendered by the engine, but templatize for true reuse.
+- **Setup-tab save strips YAML comments** (annotated reference stays in `study.example.yaml`) — optional: comment-preserving save.
+- **Generalization stage prompt** still not wired (no `prompt_doc`).
+- **CFA / measurement model** (Open decision #1) still needs the advisor: when the CFA arrives, add it via the `additional` module (or re-enable `given_solution`).
+
+---
 
 > **Canonical location + layout (as of 2026-06-21):** all pipeline code, tests, config, skills, framework docs, prompts/rubric/methodology, and example scorecards live in the **`RRG/`** repo (single source of truth; `git@github.com:kaiser-factorial/RRG.git`). The repo sits inside a **self-contained, movable project root** (e.g. `RRG_root/`, marked by a `.rrg_root` file) that also holds the runtime data in **role-based folders** — see `docs/LAYOUT.md`:
 >
