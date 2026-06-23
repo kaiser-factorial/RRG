@@ -1,6 +1,47 @@
 # HANDOFF — AI-Assisted Research Validation Project
 
-*Continuity brief for a future session (Claude or other). Read this first to get oriented, then the pointers at the bottom. Last updated 2026-06-22.*
+*Continuity brief for a future session (Claude or other). Read this first to get oriented, then the pointers at the bottom. Last updated 2026-06-22 (rrg-cli Origin tab, grading, stats extraction).*
+
+---
+
+## ⮕ Session update — 2026-06-22 (rrg-cli: Origin review, grading workflow, stats extraction)
+
+All in the **standalone `rrg-cli/` package** (own git repo, remote on GitHub). Builds on the workspace-mode work below. Run the GUI from `RRG_root`: `RRG/.venv/bin/rrg gui --workspace . --port 8765`. Static assets (`web/app.js|css|html`) reload on browser refresh; **Python changes need a server restart**. There is a `SPEC.md` at the repo root documenting the whole CLI + GUI — read it first.
+
+**What shipped this session (committed, pushed):**
+
+1. **Origin tab** (`origin.py`, `/api/origin*`): per-question separation matrix cross-checking `questions_map` ↔ `QUESTIONS.md` ↔ `ANALYSIS_PROTOCOL_OG.md` ↔ origin `SUMMARY.md` (reusing the scorecard's `_markdown_section` so "scoreable" = what the scorecard extracts); streamed PDF viewer of the origin report (`/api/origin/report.pdf`, iframe, query-token auth, relaxed `frame-ancestors 'self'` — needed because `<object>`/data-URL renders blank and `style-src 'self'` blocks inline styles, see below); a result-free **methodology generation prompt** (`OG_METHODOLOGY_PROMPT.md`) rendered with study context, paste-back writes `ANALYSIS_PROTOCOL_OG.md`, with a result-leak heuristic warning.
+2. **Per-stage model editor** (Setup): replaced the freeform roster textarea with grouped rows (model/vendor/type/license/dispatch slug); writes `roster` + `dispatch.model_slugs`.
+3. **Unified Review & Grade tab** (`grading.py`, replaces Compare + Scorecards): per-question 3-section view — a **stats comparison** (Statistic | Validator value | Origin value), full **DYFA narratives** side by side, figures, and a **verdict** control. Grading state is per-run JSON; a run is "graded" **only when a human confirms a verdict for every question** (no longer implied by a scorecard file existing). Finalize → versioned `SCORECARD_*.md` filled with verdicts; drafts deletable, finalized ones protected until reopened.
+4. **Validator-led stats extraction** (`extract.py`): flattens the validator's `raw/Q*_summary.json`; for each value, finds the same number in the origin's per-question text (`q*_results.txt` + narrative section) and shows the origin's own representation (e.g. `88.3` vs `0.8832`) + snippet, or "— not reported". Surfaces **origin-only figures** (numbers the origin reported that the validator didn't). Stage-aware framing: replication should match exactly, robustness may legitimately differ. In the rendered narratives, stat numbers are colored by model (origin **amber**, validator **stage color** — replication green / robustness blue), numbers not in the stats section are **red**, and figure refs are differentiated.
+
+**Gotchas learned this session:** the GUI's CSP is `style-src 'self'` → **inline `style=` attributes are silently dropped**; use CSS classes (`.v-origin`, `.v-stage-N`, `.v-extra`, `.figref`) instead. Chrome won't render a PDF from a `data:`/`blob:` `<object>` reliably → use a same-origin streaming endpoint in an `<iframe>`. Committing from a sandbox failed on the mounted FS (no unlink) — commit from the Mac. Active GUI tab is persisted in the URL hash so reloads stay put.
+
+**Tests:** `cd rrg-cli && PYTHONPATH=src ../RRG/.venv/bin/python -m pytest -q` — was green this session (test files: origin, grading, extract, scorecard_gui, packaging_blinding, converter, scaffold_doctor, cli). Note: `pyreadstat` must be installed for strict preflight to pass.
+
+**Blinding breach found + fixed (important).** A test run of Gemini 3.1 Pro (transcript saved under `RRG_root/experiments/gemini_test1_MovieRatings/`) revealed the validator ran `ls -la ../../../origin/ ../../../private/` to look for prior results — because packages were built/run *inside* `operator/`, every secret (origin answer key, `private/`, scorecards, `shared/ANALYSIS_PROTOCOL_OG.md`) was one `../` away. The content-lint guards what's *in* a package, not what the validator can *reach*. Fix (rrg-cli, ADR `docs/adr/0001-validator-isolation.md`): `rrg package` now writes a self-contained delivery **zip** (no `_provenance.json`); run the validator on it **outside the project**; **`rrg import <returned> --stage --model`** brings outputs back into `operator/<run>/` with zip-slip protection. We deliberately did **not** add "don't snoop" prompt language (priming risk). Also: Turn 1 of the replication/robustness prompts now gates analysis ("orientation only — confirm inputs, then stop and wait"), since Gemini began analysing before the execute turn was even sent.
+
+**Convention gap to revisit:** that Gemini run did *not* follow the deliverable conventions — no `raw/Q<n>_summary.json` (so the Review tab's stats comparison is blank), monolithic `run_analysis.py`, figures `images/visual_q<n>.png` not `Q<n>_fig.png`, report not in DYFA shape. Open decision (Corina leaning "discuss/combination"): tighten the prompt vs. add an `rrg import`-time normalize step vs. make the GUI extractor tolerant. The MovieRatings *demo* prompt/spec edits (DYFA + turn-gating) are loose on disk under `demo_projects/` (not in either repo).
+
+**Earlier UI polish (committed):** narrative stat coloring (origin amber / validator stage-color / red for untracked numbers / ranges), figure refs white-italic click-to-scroll, hash-routed tabs. Open question: whether to also color stat *names* (`p`, `chi-square`), not just values.
+
+---
+
+## ⮕ Session update — 2026-06-22 (rrg-cli GUI workspace mode)
+
+This work is in the **standalone `rrg-cli/` package** (its own git repo), *not* the `RRG/` monorepo above. `rrg-cli` is the generalized, extracted CLI/GUI engine; each study is a self-contained project directory marked by a `.rrg_root` file.
+
+**What was built — multi-project workspace mode for the GUI.** Previously the GUI was locked to one project. Now `rrg gui --workspace /path/to/workspace` confines the GUI to one workspace directory and lets you discover, switch between, and create projects safely.
+
+- **`src/rrg_cli/workspace.py`** (new): `discover_project_roots` (walks the workspace for `.rrg_root` markers, excludes `.git`/`data`/`operator`/`shared`/etc.), `initial_workspace_project`, and **`WorkspaceState`** — the key safety piece: it holds one `RLock` that serializes project *selection* and *every* active-project operation (build, convert, save_setup…), so a long-running op can't accidentally execute against a switched-out project root. `select_project`/`create_project` reject path traversal and require workspace-relative child paths.
+- **`gui.py`**: wraps `GUIState` in `WorkspaceState`; new endpoints `/api/workspace`, `/api/project/select`, `/api/project/create`. Backward compatible — without `--workspace`, `workspace.enabled=false` and behaviour is unchanged.
+- **`cli.py`**: `rrg gui --workspace DIR` flag.
+- **`web/`**: new **Projects** tab (header, `utility` class → right-aligned). Switcher table (active/ready/invalid pills, Open buttons) + new-project form. Header order is now `…Scorecards | Projects · Setup`, with **Setup rightmost**.
+- **`tests/test_scorecard_gui.py`**: `+2` tests covering discovery, switch, create, and traversal rejection (backend + HTTP API).
+
+**Status: code complete, all 22 tests pass.** Verified switching against the two real workspace projects — `LoveSmarter-validation` (root, 1 package / 13 questions) ⇄ `MovieRatings demonstration` (`demo_projects/MovieRatings/RRG_demo`, 2 packages / 11 questions); counts re-scope correctly and switch-back restores. Design doc: `rrg-cli/docs/PROJECT_WORKSPACES.md`.
+
+**⚠️ Not yet committed.** The changes are in the working tree of `rrg-cli/` (untracked `src/rrg_cli/workspace.py` + 6 modified files). A sandbox git commit failed on the mounted filesystem (no unlink/rename permission) and left a stale `rrg-cli/.git/index.lock`. To finish: `cd rrg-cli && rm -f .git/index.lock && git add -A && git commit`. A live click-through of the Projects tab in a real browser is the only verification step still outstanding (run `rrg gui --workspace .` from `RRG_root`).
 
 ---
 

@@ -47,9 +47,17 @@ study:
     vendor: Anthropic
   deliverable:
     report_name: '{MODEL}_Report.docx'
-    reporting_spec: 'Report, per question: the analysis N and any subgroup Ns; descriptive inputs (group
-      means/SDs, cross-tabs, or input correlations); the test statistic, effect size, and a 95% confidence
-      interval; and a one-sentence conclusion.'
+    reporting_spec: >-
+      For each question, deliver a reproducible artifact chain: `Q<n>_analysis.py`
+      runs the analysis and writes `raw/Q<n>_raw.csv`; `Q<n>_fig.py` reads that and
+      writes `Q<n>_fig.png`. Record `raw/Q<n>_summary.json` (machine-readable: the
+      analysis N and any subgroup Ns; descriptive inputs — group means/SDs, cross-tabs,
+      or input correlations; the test statistic, effect size, and a 95% confidence
+      interval; and a one-sentence conclusion). Compile the report in DYFA format (see
+      `DYFA_Guidelines_all.pdf`): one section per question, labelled `D - Do` (what you
+      ran), `Y - Why`, `F - Find` (the result), and `A - Answer`, embedding the matching
+      `Q<n>_fig.png`. Provide `RAW.md` and `SUMMARY.md` indexing the per-question
+      artifacts.
     method_guide:
       enabled: true
       name: DYFA
