@@ -31,10 +31,14 @@ files:
     - shared/STUDY_OVERVIEW_all.md
     - shared/INVEST_Qs_OG_all.md
     - shared/DYFA_Guidelines_all.pdf
-  # Entire folder auto-shared to all; linter verifies it is unmodified:
-  subset:
-    path: shared/validation_subset/
-    hash_locked: true
+    - shared/validation_subset/VALIDATION_INSTRUCTIONS.md     # held-constant definitions
+    # Converted dataset — deterministic, verified-identical derivatives of
+    # origin.source_data plus their metadata (regenerate via the Convert tab).
+    - data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.csv
+    - data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.parquet
+    - data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.meta.json
+    - data/LSS1_Clean_Skopje2_3133Ps_noContacts_ZV_6_8_26_forPascal.codebook.csv
+  # (Retired) prebuilt validation_subset/ — replaced by the converted dataset in `all`.
   # Operator-side files sent ONLY for the stage(s) listed:
   stage_specific:
     - file: RRG/prompts/ANALYSIS_PROTOCOL_OG.md  # original methods = replication target
@@ -73,7 +77,7 @@ stages:
     methodology: revealed        # the _OG protocol IS what's being replicated
     prompt_skill: vp-replication
     prompt_doc: RRG/prompts/STAGE1_REPLICATION_PROMPT.md
-    send: [all, subset, "RRG/prompts/ANALYSIS_PROTOCOL_OG.md"]
+    send: [all, "RRG/prompts/ANALYSIS_PROTOCOL_OG.md"]   # converted dataset travels in `all`
     output_folder: "REPLICATE_{MODEL}/"
     report_name: "{MODEL}_Report.docx"
     grade_into: SCORECARD_stage1
@@ -85,7 +89,7 @@ stages:
     methodology: hidden          # NO protocol file may be sent
     prompt_skill: vp-robustness
     prompt_doc: RRG/prompts/METHOD_FREE_PROMPT.md
-    send: [all, subset]
+    send: [all]   # converted dataset travels in `all`
     output_folder: "{MODEL}/"
     report_name: "{MODEL}_Report.docx"
     grade_into: SCORECARD_stage2
@@ -120,7 +124,7 @@ blinding:
     replication:   { require: ["ANALYSIS_PROTOCOL_OG.md"], forbid: [] }
     robustness:    { require: [], forbid: ["ANALYSIS_PROTOCOL_OG.md", "ANALYSIS_PROTOCOL_arm2.md", "*PROTOCOL*", "ORIGINAL_METHODOLOGY.md"] }
     generalization: { require: [], forbid: ["ORIGINAL_METHODOLOGY.md"] }
-  subset_integrity: hash_check          # validation_subset/ must match source
+  dataset_integrity: convert_verified   # derivatives verified identical to source at Convert time
   fail_action: block_dispatch           # override => logged human approval
 
 # ---- Constraints (driver enforces) ----

@@ -30,7 +30,7 @@ Determinism: csv is byte-identical on re-run; parquet is content-identical.
 
 Usage:
     python3 convert_data.py SOURCE [--out STEM] [--formats csv parquet]
-                            [--labeled] [--na-token ""] [--float-format FMT] [--json]
+                            [--labeled] [--na-token TOKEN] [--float-format FMT] [--json]
 
 Default SOURCE: the `origin.source_data` path in vp_config.yaml.
 Requires: pyreadstat, pandas; parquet also needs pyarrow.
@@ -77,6 +77,7 @@ REPO = find_project_root(HERE)
 
 OUT_FORMATS = ("csv", "parquet")
 LABEL_BEARING = {".sav", ".zsav", ".por", ".dta"}
+DEFAULT_NA_TOKEN = "__RRG_NA__"
 
 
 def sha256(path: Path) -> str:
@@ -121,7 +122,8 @@ def read_source(path: Path, labeled: bool):
         kw = {"apply_value_formats": labeled} if ext in LABEL_BEARING else {}
         return readers[ext](str(path), **kw)
     if ext == ".csv":
-        return pd.read_csv(path), None
+        return pd.read_csv(path, dtype=str, keep_default_na=False,
+                           na_values=[DEFAULT_NA_TOKEN]), None
     if ext == ".tsv":
         return pd.read_csv(path, sep="\t"), None
     if ext in (".xlsx", ".xls"):
@@ -134,16 +136,21 @@ def read_source(path: Path, labeled: bool):
 # --------------------------------------------------------------------------- #
 # Verification — does the derivative match the source data cell-for-cell?
 # --------------------------------------------------------------------------- #
-def read_back(path: Path):
+def read_back(path: Path, na_token: str = DEFAULT_NA_TOKEN):
     ext = path.suffix.lower()
     if ext == ".csv":
-        return pd.read_csv(path)
+        # CSV has no types. Read values as text so strings such as "true" are
+        # not inferred as booleans, preserve empty strings, and recognize only
+        # the explicit token as missing.
+        return pd.read_csv(path, dtype=str, keep_default_na=False,
+                           na_values=[na_token])
     if ext == ".parquet":
         return pd.read_parquet(path)
     return None
 
 
-def verify_against_source(src_df, out_path: Path, tol: float = 1e-9):
+def verify_against_source(src_df, out_path: Path, tol: float = 1e-9,
+                          na_token: str = DEFAULT_NA_TOKEN):
     """Read a derivative back and compare to the in-memory source frame.
 
     Numeric columns are compared within `tol` — csv stores floats as text, so a
@@ -152,7 +159,7 @@ def verify_against_source(src_df, out_path: Path, tol: float = 1e-9):
     Parquet is typed and matches bit-for-bit (max diff 0.0). Strings and the
     NaN pattern must match exactly.
     """
-    out_df = read_back(out_path)
+    out_df = read_back(out_path, na_token)
     if out_df is None:
         return {"ok": None, "reason": "format not read-verifiable"}
     if list(src_df.columns) != list(out_df.columns):
@@ -241,6 +248,14 @@ WRITERS = {"csv": write_csv, "parquet": write_parquet}
 EXT = {"csv": ".csv", "parquet": ".parquet"}
 
 
+def validate_na_token(df, token: str):
+    """Ensure CSV can distinguish missing values from real text."""
+    if not token:
+        raise SystemExit("--na-token must be non-empty for lossless CSV output")
+    if any(df[c].dropna().eq(token).any() for c in df.columns):
+        raise SystemExit(f"--na-token collides with a source value: {token!r}")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Deterministic, verified multi-format converter.")
     ap.add_argument("source", nargs="?", default=None)
@@ -249,7 +264,8 @@ def main(argv=None):
                     help="output formats (default: csv). e.g. --formats csv parquet")
     ap.add_argument("--labeled", action="store_true",
                     help="apply value labels (label-bearing sources only)")
-    ap.add_argument("--na-token", default="")
+    ap.add_argument("--na-token", default=DEFAULT_NA_TOKEN,
+                    help=f"CSV missing-value marker (default: {DEFAULT_NA_TOKEN})")
     ap.add_argument("--float-format", default=None,
                     help="csv float format (default: round-trippable shortest repr)")
     ap.add_argument("--json", action="store_true", help="emit a machine-readable summary")
@@ -266,12 +282,14 @@ def main(argv=None):
 
     stem = Path(args.out).resolve() if args.out else source.with_suffix("")
     Path(stem).parent.mkdir(parents=True, exist_ok=True)
+    if "csv" in args.formats:
+        validate_na_token(df, args.na_token)
 
     outputs = []
     for fmt in args.formats:
         path = Path(f"{stem}{EXT[fmt]}")
         WRITERS[fmt](df, path, args.na_token, args.float_format)
-        verify = verify_against_source(df, path)
+        verify = verify_against_source(df, path, na_token=args.na_token)
         outputs.append({"format": fmt, "path": str(path), "name": path.name,
                         "verify": verify})
 

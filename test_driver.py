@@ -92,9 +92,10 @@ def main():
         print("real robustness/DeepSeek:")
         pkg = Path(d["provenance"]["package_dir"]) if d else None
         check("exit 0 / lint pass", rc == 0 and d and d["lint"] == "pass")
-        check("package published (18 files + provenance)",
+        check("package published (converted dataset + provenance)",
               pkg and pkg.exists() and (pkg / "_provenance.json").exists()
-              and len(list((pkg / "validation_subset").glob("*"))) > 0)
+              and len(list(pkg.glob("*.parquet"))) > 0
+              and len(list(pkg.glob("*.meta.json"))) > 0)
         check("type/license recorded", d["provenance"]["type"] == "open")
         check("output folder created",
               Path(d["provenance"]["output_folder"]).exists())
